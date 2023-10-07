@@ -1,0 +1,138 @@
+library(ggplot2)
+library(raster)
+library(viridis)  
+library(ggthemes) 
+library(sf)
+library(ggsci)
+library(ggsn)
+library(ggspatial)
+library(patchwork)
+
+# 添加字体
+windowsFonts(
+  Arial = windowsFont("Arial")#这里使用的是字体的主题名称
+)
+
+#影像数据1
+datafold1 <- "D:/02Person/00ArticleProject/01MovingWindowsRSEI/3_2ImprovementMethod/3_2_2RSEI特征方向对比/pc1Direc2000blend.tif"
+test1 <- raster(datafold1) 
+
+#很关键的一步：将栅格数据转成可供ggplot2绘制的数据格式
+test_spdf1 <- as(test1, "SpatialPixelsDataFrame")
+test_df1 <- as.data.frame(test_spdf1)
+# 赋值列名
+colnames(test_df1) <- c("value", "x", "y")
+
+# 从SpatialPixelsDataFrame转换为SpatialPolygonsDataFrame
+test_sp1 <- as(test_spdf1, "SpatialPolygonsDataFrame")
+# 从SpatialPolygonsDataFrame转换为sf对象
+test_sf1 <- sf::st_as_sf(test_sp1)
+
+#影像数据2
+datafold2 <- "D:/02Person/00ArticleProject/01MovingWindowsRSEI/3_2ImprovementMethod/3_2_2RSEI特征方向对比/pc1Direc4800blend.tif"
+test2 <- raster(datafold2) 
+#很关键的一步：将栅格数据转成可供ggplot2绘制的数据格式
+test_spdf2 <- as(test2, "SpatialPixelsDataFrame")
+test_df2 <- as.data.frame(test_spdf2)
+# 赋值列名
+colnames(test_df2) <- c("value", "x", "y")
+pc1direction2 <- c("++--", "--++")
+classcolor2 <- c( "#5dbcea", "#cccacb")
+# 从SpatialPixelsDataFrame转换为SpatialPolygonsDataFrame
+test_sp2 <- as(test_spdf2, "SpatialPolygonsDataFrame")
+# 从SpatialPolygonsDataFrame转换为sf对象
+test_sf2 <- sf::st_as_sf(test_sp2)
+
+pc1direction1 <- c("++-+", "++--", "--++", "--+-")
+classcolor1 <- c("#d03e34", "#5dbcea", "#020203", "#cccacb")
+
+#开始绘图p1
+p1 <- ggplot() +
+  geom_raster(data = test_df1 , aes(x = x, y = y,fill = factor(value))) + 
+  coord_sf(crs = st_crs(test_sf1)) +
+    annotation_scale(
+      location = "br",
+      text_face = NULL,
+      width_hint = 0.3, 
+      pad_x = unit(0.15, "cm"),
+      pad_y = unit(0.15, "cm"),
+      height = unit(0.15, "cm"),
+  ) +    #添加比例尺
+  annotation_north_arrow(location = "tl", which_north = "true",style = north_arrow_fancy_orienteering)+ #添加指北针
+  scale_fill_manual(name = "Direction",values = classcolor1,labels = pc1direction1) +
+  labs( x =NULL,y= NULL, # X Y坐标轴
+        #title = "Raster data Charts Exercise", #设置主标题
+        #subtitle = "land use data", #设置副标题
+        #caption = 'Visualization by DataCharm'  #说明文字
+  ) +
+  theme_bw()+
+  theme(text = element_text(family = "Arial",face= 'bold'),
+        title = element_text(family = 'Arial',size = 12,face = 'bold'),
+        
+        #修改刻度线内
+        axis.ticks.length=unit(0.1, "cm"),
+        #设置刻度label的边距
+        axis.text.x = element_text(margin=unit(c(0.05,0.1,0.1,0.1), "cm")), 
+        axis.text.y = element_text(margin=unit(c(0.1,0.05,0.1,0.1), "cm")),
+        axis.text = element_text(family = 'Arial', size = 8, face = NULL, colour = "black"),
+        
+        legend.key.size = unit(0.1, "inches"),
+        legend.title = element_text(size = 8, face = 'bold'),
+        legend.position = c(0.85, .147),
+        
+        panel.border = element_rect(linewidth = 1), # # 设置边框厚度,设置为2，你可以根据需要调整
+        panel.grid.major = element_line(linewidth = .2, linetype = "dashed", colour = "grey"),
+        panel.grid.minor = element_line(linewidth = .25, linetype = "dot", colour = "black"),
+  ) + 
+  scale_x_continuous(breaks = seq(116.2, max(test_df1$x), by = 0.1)) + 
+  scale_y_continuous(breaks = seq(25.5, max(test_df1$y), by = 0.1))
+p1
+
+#开始绘图p2
+p2 <- ggplot() +
+  geom_raster(data = test_df2 , aes(x = x, y = y,fill = factor(value))) + 
+  coord_sf(crs = st_crs(test_sf2)) +
+  annotation_scale(
+    location = "br",
+    text_face = NULL,
+    width_hint = 0.3, 
+    pad_x = unit(0.15, "cm"),
+    pad_y = unit(0.15, "cm"),
+    height = unit(0.15, "cm"),
+  ) +    #添加比例尺
+  annotation_north_arrow(location = "tl", which_north = "true",style = north_arrow_fancy_orienteering)+ #添加指北针
+  scale_fill_manual(name = "Direction",values = classcolor2,labels = pc1direction2) +
+  labs( x =NULL,y= NULL, # X Y坐标轴
+        #title = "Raster data Charts Exercise", #设置主标题
+        #subtitle = "land use data", #设置副标题
+        #caption = 'Visualization by DataCharm'  #说明文字
+  ) +
+  theme_bw()+
+  theme(text = element_text(family = "Arial",face= 'bold'),
+        title = element_text(family = 'Arial',size = 12,face = 'bold'),
+        
+        #修改刻度线内
+        axis.ticks.length=unit(0.1, "cm"),
+        #设置刻度label的边距
+        axis.text.x = element_text(margin=unit(c(0.05,0.1,0.1,0.1), "cm")), 
+        axis.text.y = element_text(margin=unit(c(0.1,0.05,0.1,0.1), "cm")),
+        axis.text = element_text(family = 'Arial', size = 8, face = NULL, colour = "black"),
+        
+        legend.key.size = unit(0.1, "inches"),
+        legend.title = element_text(size = 8, face = 'bold'),
+        legend.position = c(0.85, .147),
+        
+        panel.border = element_rect(linewidth = 1), # # 设置边框厚度,设置为2，你可以根据需要调整
+        panel.grid.major = element_line(linewidth = .2, linetype = "dashed", colour = "grey"),
+        panel.grid.minor = element_line(linewidth = .25, linetype = "dot", colour = "black"),
+  ) + 
+  scale_x_continuous(breaks = seq(116.2, max(test_df1$x), by = 0.1)) + 
+  scale_y_continuous(breaks = seq(25.5, max(test_df1$y), by = 0.1))
+p2
+
+p <- p1 + p2
+p
+
+
+ggsave("D:/02Person/00ArticleProject/01MovingWindowsRSEI/R_Plot/出图结果/output.png", p, width = 17, height = 10, units = 'cm', dpi = 1200)
+
